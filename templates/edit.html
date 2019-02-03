@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block titie %}
+编辑任务
+{% endblock %}
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/edit.css') }}">
+ {% endblock %}
+{% block content %}
+    <div class="col-md-5 col-md-offset-3">
+        <h1 align="center">编辑任务</h1>
+         {{ self.flashed_messages() }}
+        {{   wtf.quick_form(forms) }}
+        <div class="row">
+            <div class="col-lg-12">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                             <a href="{{ url_for('upload',todo_id=forms.todo_id,page=forms.page)}}" class="btn btn-warning" role="button">上传附件</a>
+                        </span>
+                    </div>
+                 {% for att in forms.attatches %}
+
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    <input type="checkbox" aria-label="Checkbox for following text input">
+                                </span>
+                                <input type="text" class="form-control" name="{{ att.id }}" value="{{ att.filepath }}" aria-label="Text input with checkbox">
+                                <a href="{{ url_for('upload_delete',att_id=att.id,todo_id=forms.todo_id,page=forms.page) }}" class="btn btn-warning" role="button">删除</a>
+                            </div>
+
+                 {% endfor %}
+            </div>
+        </div>
+
+     </div>
+{% endblock %}

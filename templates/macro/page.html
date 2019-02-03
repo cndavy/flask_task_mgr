@@ -1,0 +1,40 @@
+{% macro paginate(funame,dataObj) %}
+    <ul class="pagination pull-right">
+
+
+{#      点击前一页   #}
+    <li>
+        {% if dataObj.has_prev %}
+            <li><a href="{{ url_for(funame,page=dataObj.prev_num) }}">«</a></li>
+        {% else %}
+            <li class="disabled"><a href="#">«</a></li>
+        {% endif %}
+    </li>
+{#            点击首页#}
+        <li><a href="{{ url_for(funame,page=1) }}">首页</a></li>
+    <li>
+{#        中间页列表,如果页数太多无法显示，则用...代替#}
+        {% for v in dataObj.iter_pages() %}
+            {% if v==dataObj.page %}
+                <li class="active"><a href="{{ url_for(funame,page=v) }}">{{ v }}</a></li>
+            {% elif v==None %}
+                <li class="disabled"><a href="#">...</a></li>
+            {% else %}
+                <li><a href="{{ url_for(funame,page=v) }}">{{ v }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </li>
+
+    {#        点击尾页#}
+{#        <li><a href="{{ url_for(funame,page=dataObj.) }}">首页</a></li>#}
+    <li>
+        {#      点击下一页   #}
+        {% if dataObj.has_prev %}
+            <li><a href="{{ url_for(funame,page=dataObj.next_num) }}">»</a></li>
+        {% else %}
+            <li class="disabled"><a href="#">»</a></li>
+        {% endif %}
+    </li>
+    </ul>
+
+{% endmacro %}
