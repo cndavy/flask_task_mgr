@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
-{% import 'bootstrap/wtf.html' as wtf %}
+{%  import 'bootstrap/wtf.html' as wtf %}
 {% block titie %}
     处理任务
 {% endblock %}
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static',filename='bootstrap/bootstrap-table.css') }}">
+ {% endblock %}
+{% block scripts %}
+    {{ super() }}
 
+
+{% endblock %}
 {% block navbar %}
    {{ super() }}
 {% endblock %}
@@ -12,42 +20,26 @@
 
     <br>
     {{ self.flashed_messages() }}
+    {% if forms %}
+       <div class="col-lg-offset-2 col-lg-6">
+        {{   wtf.quick_form(forms) }}
+       </div>
+    {% endif %}
 
-{#    <br>#}
-{#    <form action="{{ url_for('add') }}" class="form-horizontal" method="post">#}
-{#        <div class="form-group">#}
-{#            <div class="col-lg-offset-3 col-lg-4 col-sm-5">#}
-{#                <input type="text" class="form-control" placeholder="清添加任务" required="required" name="name">#}
-{#            </div>#}
-{#            <div class="col-lg3 col-sm-2">#}
-{#                <select class="form-control" name="worker">#}
-{#                    {% for user in users %}#}
-{#                        <option value="{{ user.id }}">{{ user.name }}</option>#}
-{#                    {% endfor %}#}
-{#                </select>#}
-{#            </div>#}
-{#            <div class="col-lg3 col-sm-2">#}
-{#                <input type="submit" class="btn btn-primary" value="完成">#}
-{#            </div>#}
-{#        </div>#}
-{#    </form>#}
-   <div class="col-lg-offset-3 col-lg-6">
-    {{   wtf.quick_form(forms) }}
-   </div>
+    <div class="col-lg-offset-1 col-lg-10">
 
-
-    <div class="col-lg-offset-2 col-lg-8">
-    <table class="table table-striped">
-      <caption><h1>任务列表</h1></caption>
+    <table
+           class="table table-striped">
+      <caption><h2>任务列表</h2></caption>
       <thead>
         <tr>
-            <th>任务编号</th>
-            <th>任务名称</th>
-            <th>创建时间</th>
-            <th>结束时间</th>
-            <th>安排人员</th>
-            <th>任务部门</th>
-            <th>任务状态</th>
+            <th data-field='id'>任务编号</th>
+            <th data-field='name'>任务名称</th>
+            <th data-field='add_time'>创建时间</th>
+            <th data-field='end_time'>结束时间</th>
+            <th data-field='worker.username'>安排人员</th>
+            <th data-field='department.name'>任务部门</th>
+            <th >任务状态</th>
             <th>操作</th>
         </tr>
       </thead>

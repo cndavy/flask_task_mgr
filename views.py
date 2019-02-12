@@ -2,15 +2,19 @@ import os
 import random
 from datetime import datetime, time
 
-from flask import render_template, redirect, request, url_for, flash, session, g, jsonify, send_from_directory
+import flask
+from flask import render_template, redirect, request, url_for, flash, session, g, jsonify, send_from_directory, Flask
+from flask_bootstrap import Bootstrap
 from flask_login import current_user, login_user, logout_user
+from flask_wtf import csrf
+from flask_wtf.csrf import generate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from config import basedir, UPLOAD_FOLDER
 from forms import EditForm, EditProfileForm, LoginForm, AttatchForm
-from models import app, Userlog, User, Todo, db, Permission, Attatch
-from utils import getPermisson, islogin, allowed_file, get_uploaddir
+from models import app, Userlog, User, Todo, db, Attatch
+from utils import getPermisson, islogin, allowed_file, get_uploaddir, havePermission, Permission
 
 
 @app.errorhandler(404)
@@ -21,12 +25,24 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
+
+
+
 @app.before_request
 def before_request():
     if not 'user' in session:
         g.islogin = False
     else :
         g.islogin =True
+
+@app.after_request
+def after_request(response):
+    # 调用函数生成 csrf_token
+    csrf_token = generate_csrf()
+    # 通过 cookie 将值传给前端
+    response.set_cookie("csrf_token", csrf_token)
+    return response
+
 
 #首页
 @app.route('/')
@@ -62,7 +78,7 @@ def login():
 @app.route('/list/')
 @islogin
 def list(page=1):
-    forms = EditForm()
+    forms = EditForm(csrf_enabled=True)
     if forms.validate_on_submit():
         add()
     todos = Todo.query.order_by(Todo.status).order_by(Todo.add_time.desc()).paginate(page,per_page=6)
@@ -109,6 +125,7 @@ def tododown(page,id):
 #删除操作
 @app.route('/delete/<int:page>/<int:id>')
 @islogin
+@havePermission
 def delete(page,id):
     todo=Todo.query.filter_by(id=id).first()
     db.session.delete(todo)
@@ -119,6 +136,7 @@ def delete(page,id):
 #编辑操作
 @app.route('/edit/<int:page>/<int:id>',methods=['GET','POST'])
 @islogin
+@havePermission
 def edit(page,id):
     forms=EditForm()
     todo = Todo.query.filter_by(id=id).first()
@@ -145,7 +163,7 @@ def edit(page,id):
     return render_template('edit.html',forms=forms)
 
 #Search
-@app.route('/search/',methods=['POST'])
+@app.route('/search/',methods=['GET','POST'])
 @islogin
 def search():
     str=request.form['searchstr']
@@ -188,8 +206,9 @@ def backhead():
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @islogin
+
 def edit_profile():
-    form = EditProfileForm(current_user.username)
+    form = EditProfileForm(current_user.username,csrf_enabled=True)
     if form.validate_on_submit():
         user = User.query.filter_by(username=current_user.username).first()
         newpasswd = form.newpasswd.data
@@ -203,8 +222,9 @@ def edit_profile():
     return render_template("edit_profile.html",forms=form)
 
 
-@app.route('/uploaddelete/<int:att_id>/<int:todo_id>/<int:page>')
+@app.route('/upload_delete/<int:att_id>/<int:todo_id>/<int:page>' )
 @islogin
+@havePermission
 def upload_delete(att_id,todo_id,page):
     att=Attatch.query.filter(Attatch.id==att_id,Attatch.todo_id==todo_id).first()
     filename=get_uploaddir()+os.path.sep+att.filepath
@@ -214,6 +234,9 @@ def upload_delete(att_id,todo_id,page):
             db.session.delete(att)
             db.session.commit()
             flash('删除附件成功！','ok')
+        else:
+            flash("附件%s文件没有找到！"%filename,'error')
+
     except:
         flash("删除附件%s出错！"%filename,'error')
 
@@ -228,6 +251,7 @@ def uploadlist(todo_id):
 
 @app.route('/download/<int:att_id>')
 @islogin
+@havePermission
 def download(att_id):
     if request.method=="GET":
         att = Attatch.query.filter(Attatch.id == att_id).first()
@@ -239,7 +263,7 @@ def download(att_id):
 @app.route('/upload/<int:todo_id>/<int:page>',methods=['GET', 'POST'])
 @islogin
 def upload(todo_id,page):
-    forms=AttatchForm()
+    forms=AttatchForm(csrf_enabled=True)
     forms.page=page
     forms.todo_id=todo_id
     attatches = Attatch.query.filter(Attatch.todo_id == todo_id).all()
@@ -270,8 +294,6 @@ def upload(todo_id,page):
             return redirect(url_for('edit', page=page, id=todo_id))
     else :
         return render_template('upload.html',forms=forms)
-
-
 
 
 

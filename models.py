@@ -1,19 +1,32 @@
-import os
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+
+from flask_wtf import CSRFProtect
+
+import config
+from datetime import datetime
+
+from flask import Flask
+from flask_bootstrap import Bootstrap
+from flask_login import LoginManager, UserMixin
+from flask_sqlalchemy import SQLAlchemy
+
 import config
 
 #将models绑定app
 app=Flask(__name__)
+
 app.config.from_object(config)
+CSRFProtect(app)
+
 login = LoginManager(app)
 
 
 #绑定Bootstrap前端框架，可以使用框架内简洁的样式
-Bootstrap(app)
+bootstrap=Bootstrap(app)
 
 #实例化db对象
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -37,7 +50,7 @@ class Todo(db.Model):
 class Attatch(db.Model):
     '''任务附件'''
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    sourcename = db.Column(db.String(250), unique=True)
+    sourcename = db.Column(db.String(250))
     filepath=db.Column(db.String(250),unique=True)
     add_time = db.Column(db.DateTime, default=datetime.now())
     todo_id=db.Column(db.Integer,db.ForeignKey('todo.id'))
@@ -78,12 +91,6 @@ class Role(db.Model):
     permissions = db.Column(db.Integer)                             #用户权限设置，是一个数值
    # users = db.relationship('User', backref='role',lazy='dynamic')  #和User类来进行连接
 
-class Permission:
-    FOLLOW = 0X01
-    COMMENT = 0X02
-    WRITE_ARTICLES = 0X04
-    MODERATE_COMMENTS = 0X08
-    ADMINISTER = 0X80
 
 class Userlog(db.Model):
     """一个关于用户登录日志的类"""

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block titie %}
+    附件
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script src="{{url_for('static',filename='bootstrap/bootstrap-table.min.js')}}"></script>
+    <script src="{{url_for('static',filename='bootstrap/locale/bootstrap-table-zh-CN.min.js')}}"></script>
+    <script >
+
+ var $table = $('#table')
+  var $button = $('#button')
+
+  $(function() {
+    $button.click(function () {
+      alert(JSON.stringify($table.bootstrapTable('getOptions')))
+    })
+  })
+    </script>
+{% endblock %}
+{% block navbar %}
+   {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <br>
+    {{ self.flashed_messages() }}
+
+
+    <div class="col-lg-offset-2 col-lg-8">
+    <table class="table table-striped">
+      <caption><h1>附件列表</h1></caption>
+    <br> {{ forms.description }}
+      <thead>
+        <tr>
+            <th>附件编号</th>
+            <th>附件服务器名称</th>
+            <th>附件源文件名</th>
+            <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for att in forms.attaches %}
+        <tr>
+            <td>{{ att.id }}</td>
+            <td>{{ att.filepath }}</td>
+            <td>{{ att.sourcename |safe}}</td>
+          <td>
+
+          </td>
+            <td>
+            <a href="{{ url_for('download',att_id=att.id) }}" class="btn btn-warning" role="button">下载附件</a>
+
+            </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+</div>
+{% endblock %}

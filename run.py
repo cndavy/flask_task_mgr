@@ -1,3 +1,4 @@
+from flask_bootstrap import Bootstrap
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 

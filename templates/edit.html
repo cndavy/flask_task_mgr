@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='css/edit.css') }}">
  {% endblock %}
 {% block content %}
-    <div class="col-md-5 col-md-offset-3">
+    <div class="col-md-8 col-md-offset-1">
         <h1 align="center">编辑任务</h1>
          {{ self.flashed_messages() }}
         {{   wtf.quick_form(forms) }}
@@ -26,8 +26,9 @@
                                 <span class="input-group-addon">
                                     <input type="checkbox" aria-label="Checkbox for following text input">
                                 </span>
-                                <input type="text" class="form-control" name="{{ att.id }}" value="{{ att.filepath }}" aria-label="Text input with checkbox">
-                                <a href="{{ url_for('upload_delete',att_id=att.id,todo_id=forms.todo_id,page=forms.page) }}" class="btn btn-warning" role="button">删除</a>
+                                <input type="text" class="form-control" name="att.filepath" value="{{ att.filepath }}" aria-label="服务器名称"  >
+                                <input type="text" class="form-control" name="att.sourcename" value="{{ att.sourcename|safe }}" aria-label="原文件名称"   title="原文件名称">
+                                <a  href="{{ url_for('upload_delete',att_id=att.id,todo_id=forms.todo_id,page=forms.page) }}" class="btn btn-warning" role="button">删除</a>
                             </div>
 
                  {% endfor %}
