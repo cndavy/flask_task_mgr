@@ -1,13 +1,12 @@
 import json
-import os
 from functools import wraps
 from urllib.request import urlopen
 
 from flask import session, redirect, url_for, flash, request
 from flask_wtf.csrf import generate_csrf, validate_csrf
 
-from config import ALLOWED_EXTENSIONS, basedir
-from models import User, app, Todo, Attatch
+from config import ALLOWED_EXTENSIONS
+from models import User, Attatch, Todo
 
 
 def getPermisson():
@@ -65,13 +64,26 @@ def havePermission(f):
                     pass
                 else:
                     flash("没有权限", 'error')
-                    return redirect(url_for('login'))
+                    return redirect(url_for('list'))
             elif f.__name__=='edit':#任务更新
                 if pem&Permission.ADMINISTER==Permission.ADMINISTER:
                     pass
                 else:
+
                     flash("没有权限", 'error')
-                    return redirect(url_for('login'))
+                    return redirect(url_for('list'))
+            elif f.__name__=='todoup' or f.__name__=='tododown':# 完成
+                if pem&Permission.ADMINISTER==Permission.ADMINISTER:
+                    pass
+                else:
+                    todo = Todo.query.filter(Todo.id == kwargs.get('id')
+                                               ).first()
+                    if str(todo.worker_id) == session['user_id']:  # 任务被分派人
+                        pass
+                    else:
+                        flash("没有权限", 'error')
+                        return redirect(url_for('list'))
+
 
             elif f.__name__=='upload_delete':#附件删除
 
@@ -100,16 +112,26 @@ def havePermission(f):
     return wrapper
 
 
-def get_uploaddir():
-    file_dir = os.path.join(basedir, app.config['UPLOAD_FOLDER'])  # 拼接成合法文件夹地址
-    if not os.path.exists(file_dir):
-        os.makedirs(file_dir)  # 文件夹不存在就创建
-    return file_dir
-
-
 class Permission:
     FOLLOW = 0X01
     COMMENT = 0X02
     WRITE_ARTICLES = 0X04
     MODERATE_COMMENTS = 0X08
     ADMINISTER = 0X80
+
+
+def create_csrf_token(response):
+    # 调用函数生成 csrf_token
+    csrf_token = generate_csrf()
+    # 通过 cookie 将值传给前端
+    response.set_cookie("csrf_token", csrf_token)
+    return response
+
+from flask import g
+def set_var_g():
+    if not 'user_id' in session:
+
+        g.islogin = False
+    else:
+        g.islogin = True
+        g.isadmin = (getPermisson() & Permission.ADMINISTER) > 0

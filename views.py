@@ -2,19 +2,21 @@ import os
 import random
 from datetime import datetime, time
 
-import flask
-from flask import render_template, redirect, request, url_for, flash, session, g, jsonify, send_from_directory, Flask
-from flask_bootstrap import Bootstrap
+
+from flask import render_template, redirect, request, url_for, flash, session, g, send_from_directory, current_app
+
 from flask_login import current_user, login_user, logout_user
-from flask_wtf import csrf
+
 from flask_wtf.csrf import generate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from config import basedir, UPLOAD_FOLDER
+from config import  UPLOAD_FOLDER
 from forms import EditForm, EditProfileForm, LoginForm, AttatchForm
 from models import app, Userlog, User, Todo, db, Attatch
-from utils import getPermisson, islogin, allowed_file, get_uploaddir, havePermission, Permission
+from utils import getPermisson, islogin, allowed_file, havePermission, Permission, create_csrf_token, \
+    set_var_g
+from utils_os import get_uploaddir
 
 
 @app.errorhandler(404)
@@ -30,18 +32,12 @@ def internal_error(error):
 
 @app.before_request
 def before_request():
-    if not 'user' in session:
-        g.islogin = False
-    else :
-        g.islogin =True
+    set_var_g()
 
 @app.after_request
 def after_request(response):
-    # 调用函数生成 csrf_token
-    csrf_token = generate_csrf()
-    # 通过 cookie 将值传给前端
-    response.set_cookie("csrf_token", csrf_token)
-    return response
+    return create_csrf_token(response)
+
 
 
 #首页
@@ -49,10 +45,6 @@ def after_request(response):
 @islogin
 def index():
     return render_template('base.html')
-
-
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # if current_user.is_authenticated:
@@ -90,6 +82,7 @@ def list(page=1):
 @app.route('/todoup/<int:page>/<int:id>')
 @app.route('/todoup/')
 @islogin
+@havePermission
 def todoup(page,id):
     todo=Todo.query.filter_by(id=id).first()
     permission = getPermisson()
@@ -113,6 +106,7 @@ def todoup(page,id):
 @app.route('/tododown/<int:page>/<int:id>')
 @app.route('/tododown/')
 @islogin
+@havePermission
 def tododown(page,id):
     todo=Todo.query.filter_by(id=id).first()
     todo.status=0
